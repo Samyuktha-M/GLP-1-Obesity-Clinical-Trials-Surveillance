@@ -29,6 +29,7 @@ and presents the findings in an interactive dashboard.
 ```
 sql/
   schema.sql                    — core trials + pull_log tables
+  data_sanity_checks.sql        - sanity checks on the loaded data
   termination_categories.sql    — table for LLM-categorized termination reasons
   eligibility_extraction.sql    — table for LLM-extracted eligibility fields
 src/
@@ -102,7 +103,7 @@ A multi-page dashboard built from CSV exports of the above:
 ## Setup
 
 ```bash
-cd glp1-trials-surveillance   # or wherever you placed the project
+cd GLP-1-Obesity-Clinical-Trials-Surveillance   # or wherever you placed the project
 pip install -r requirements.txt
 cp .env.example .env   # fill in DB credentials + ANTHROPIC_API_KEY
 mysql -u root -p < sql/schema.sql
