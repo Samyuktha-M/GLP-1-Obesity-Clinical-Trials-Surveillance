@@ -29,7 +29,9 @@ and presents the findings in an interactive dashboard.
 ```
 sql/
   schema.sql                    — core trials + pull_log tables
-  data_sanity_checks.sql        - sanity checks on the loaded data
+  data_sanity_checks.sql        — validation queries (duplicates, NULL rates,
+                                   date/enrollment ranges) and creation of the
+                                   glp1_drug_trials scoping view
   termination_categories.sql    — table for LLM-categorized termination reasons
   eligibility_extraction.sql    — table for LLM-extracted eligibility fields
 src/
@@ -50,10 +52,16 @@ safely re-run to pick up new or updated trials without creating duplicates.
 The full raw API response is also archived per trial (`raw_json` column) for
 later reference.
 
-**2. Scoping**
-A view, `glp1_drug_trials`, filters the full dataset down to interventional
-trials with a tracked phase — the relevant population for phase/enrollment/
-sponsor analysis (579 trials).
+**2. Validation and scoping (`sql/data_sanity_checks.sql`)**
+Before building analysis on top of the ingested data, a set of validation
+queries check for duplicate `nct_id`s, unexpectedly high NULL rates on key
+fields, reasonable date/enrollment ranges, and expected status/phase
+category values — plus manual spot-checks of individual trials against
+ClinicalTrials.gov. This file also defines the `glp1_drug_trials` view, which
+filters the full dataset down to interventional trials with a tracked phase
+(excluding 143 observational and 194 non-phase-tracked interventional
+trials) — the relevant population for phase/enrollment/sponsor analysis
+(579 trials).
 
 **3. SQL analysis**
 Direct SQL queries against `glp1_drug_trials` covering:
@@ -107,9 +115,10 @@ cd GLP-1-Obesity-Clinical-Trials-Surveillance   # or wherever you placed the pro
 pip install -r requirements.txt
 cp .env.example .env   # fill in DB credentials + ANTHROPIC_API_KEY
 mysql -u root -p < sql/schema.sql
+python3 src/ingest.py
+mysql -u root -p < sql/data_sanity_checks.sql   # validates data + creates glp1_drug_trials view
 mysql -u root -p < sql/termination_categories.sql
 mysql -u root -p < sql/eligibility_extraction.sql
-python3 src/ingest.py
 python3 src/categorize_terminations.py
 python3 src/extract_eligibility.py
 ```
