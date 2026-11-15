@@ -34,6 +34,9 @@ sql/
                                    glp1_drug_trials scoping view
   termination_categories.sql    — table for LLM-categorized termination reasons
   eligibility_extraction.sql    — table for LLM-extracted eligibility fields
+  sql_analysis.sql              — analysis queries: trial volume, status mix,
+                                   sponsors, enrollment, drug comparison,
+                                   time-to-completion, and eligibility patterns
 src/
   ingest.py                     — pulls & loads trial data from the API
   categorize_terminations.py    — LLM classification of termination reasons
@@ -63,7 +66,7 @@ filters the full dataset down to interventional trials with a tracked phase
 trials) — the relevant population for phase/enrollment/sponsor analysis
 (579 trials).
 
-**3. SQL analysis**
+**3. SQL analysis (`sql/sql_analysis.sql`)**
 Direct SQL queries against `glp1_drug_trials` covering:
 - Trial phase distribution and enrollment trends over time
 - Drug comparison (semaglutide, liraglutide, tirzepatide, retatrutide —
@@ -71,6 +74,7 @@ Direct SQL queries against `glp1_drug_trials` covering:
 - Sponsor leaderboard and sponsor class breakdown
 - Time-to-completion analysis
 - Termination status and reasons
+- Eligibility patterns (age range over time, bariatric surgery exclusion, comorbidities, healthy-volunteer eligibility), using the LLM-extracted tables
 
 **4. LLM-based structured extraction (Claude API)**
 Two features apply Claude to unstructured trial text and save the results
@@ -121,6 +125,7 @@ mysql -u root -p < sql/termination_categories.sql
 mysql -u root -p < sql/eligibility_extraction.sql
 python3 src/categorize_terminations.py
 python3 src/extract_eligibility.py
+mysql -u root -p glp1_trials < sql/sql_analysis.sql   # or run the queries one at a time in MySQL Workbench
 ```
 
 ## Notes on data quality
